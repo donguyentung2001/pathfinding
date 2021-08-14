@@ -588,17 +588,17 @@ function App() {
       <div class="modal_content">
         <span class="close">&times;</span>
         <p> For a quick start, click on two grids. </p>
-        <img src = {pic1} />
+        <img src = {pic1} alt="two grids" />
         <p> Then, click on "Run Pathfinding Algorithms" and choose an algorithm you want to find the shortest path with</p>
-        <img src = {pic2} />
+        <img src = {pic2} alt="run pathfinding algorithms"/>
         <p> Now you can see how the algorithms find the shortest path between two grids! </p> 
-        <img src = {pic4} />
+        <img src = {pic4} alt="shortest path" />
         <p> Click twice on a grid to make it an obstacle. </p>
-        <img src = {pic5} />
+        <img src = {pic5} alt="obstacle" />
         <p> You can also choose to quickly build a maze, aka placing obstacles "smartly", from one of the maze generation algorithms by clicking on "Generate Maze" and choose one algorithm. </p>
-        <img src = {pic6} /> 
+        <img src = {pic6} alt="maze"  /> 
         <p> Now you can watch how our algorithm builds a maze! You can put two start/end grids on this new maze and run the pathfinding algorithm as well! </p>
-        <img src = {pic7} /> 
+        <img src = {pic7} alt="maze-run"  /> 
         <p> Finally, to reset our board, click on "Reset board" on the nagivation bar. </p>
         <p> Enjoy pathfinding! </p>
       </div>

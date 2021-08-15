@@ -1,8 +1,9 @@
 import logo from './logo.svg';
 import './App.css';
 import { Component } from 'react';
-import {NavDropdown, Navbar, Container, Nav} from 'react-bootstrap'
+import {NavDropdown, Navbar, Container, Nav, Modal, Button} from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import ReactDOM from 'react-dom'
 import pic1 from './pic1.png'
 import pic2 from './pic2.png'
 import pic4 from './pic4.png'
@@ -14,15 +15,85 @@ import pic7 from './pic7.png'
 -  add A* search 
  */
 
-function popUpTutorial(event) {
-  const modal = document.querySelector(".modal")
-  const closeBtn = document.querySelector(".close")
-  modal.style.display = "block";
-  closeBtn.addEventListener("click", () => {
-    modal.style.display = "none";
-  })
-}
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+  },
+};
 
+class TutorialPopUp extends Component { 
+  constructor(props) { 
+    super(props); 
+    this.state = { 
+      tutorialOn: true
+    }
+    this.handleClose = this.handleClose.bind(this)
+  }
+
+  componentDidUpdate(prevProps) { 
+    if (this.props.showTutorial != prevProps.showTutorial) { 
+      this.setState(state => ({ 
+        tutorialOn: true 
+      }))
+    }
+  }
+
+  handleClose() { 
+    this.setState(state => ({ 
+      tutorialOn: false 
+    }))
+  }
+
+  render() { 
+    console.log(this.props.show)
+    return (
+      <div> 
+      <Modal show = {this.state.tutorialOn} style={customStyles} onHide = {this.handleClose} > 
+      <Modal.Header
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+      <Modal.Title> 
+      Tutorial
+      </Modal.Title>
+      </Modal.Header>          
+      <Modal.Body> 
+      <p> For a quick start, click on two grids. </p>
+       <img src = {pic1} alt="two grids" style = {{width:"400px", height:"200px"}}/>
+       <p> Then, click on "Run Pathfinding Algorithms" and choose an algorithm you want to find the shortest path with</p>
+       <img src = {pic2} alt="run pathfinding algorithms" style = {{width:"400px", height:"200px"}}/>
+       <p> Now you can see how the algorithms find the shortest path between two grids! </p>
+       <img src = {pic4} alt="shortest path" style = {{width:"400px", height:"200px"}}/>
+       <p> Click twice on a grid to make it an obstacle. </p>
+       <img src = {pic5} alt="obstacle" style = {{width:"400px", height:"200px"}}/>
+       <p> You can also choose to quickly build a maze, aka placing obstacles "smartly", from one of the maze generation algorithms by clicking on "Generate Maze" and choose one algorithm. </p>
+       <img src = {pic6} alt="maze" style = {{width:"400px", height:"200px"}}/>
+       <p> Now you can watch how our algorithm builds a maze! You can put two start/end grids on this new maze and run the pathfinding algorithm as well! </p>
+       <img src = {pic7} alt="maze-run" style = {{width:"400px", height:"200px"}}/>
+       <p> Finally, to reset our board, click on "Reset board" on the nagivation bar. </p>
+       <p> Enjoy pathfinding! </p>
+       </Modal.Body>
+       <Modal.Footer style={{
+          display: "flex",
+          justifyContent: "center",
+        }}>
+          <Button variant="primary" style = {{width: "70px", height: "50px"}} onClick={this.handleClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </div>
+    )
+  }
+}
 class Element extends Component { 
   constructor(props) {
     super(props);
@@ -74,10 +145,12 @@ class Graph extends Component {
     this.generateMazeRandom = this.generateMazeRandom.bind(this)
     this.generateMazePrim = this.generateMazePrim.bind(this)
     this.restoreEndpoints = this.restoreEndpoints.bind(this)
+    this.showTutorial = this.showTutorial.bind(this)
     this.state = { 
       adjacency_list: {},
       endpoints:[], 
       conditions:{}, 
+      tutorialIsOpen: false, 
     };
     for (let i = 1; i <= 400; i++) {
       this.state.conditions[i] = "default"; 
@@ -120,6 +193,12 @@ class Graph extends Component {
     //this.state.adjacency_list = new_adjacency_list;
     this.state.adjacency_list = new_adjacency_list
   };
+
+  showTutorial() {   
+    this.setState({ 
+      tutorialIsOpen: !this.state.tutorialIsOpen
+    })
+  }
 
   notVertical(i, j) { 
     var vertical_candidates = [i-1, i+1, i-20, i+20]
@@ -548,7 +627,7 @@ class Graph extends Component {
         <Container>
         <Navbar.Brand> Pathfinding Visualizer</Navbar.Brand>
         <Nav className="me-auto">
-          <Nav.Link onClick={popUpTutorial}> Tutorial </Nav.Link>
+          <Nav.Link onClick = {this.showTutorial}> Tutorial </Nav.Link>
           <NavDropdown title="Run Pathfinding Algorithms" id="basic-nav-dropdown"> 
           <NavDropdown.Item onClick = {this.BFS}>Breadth First Search</NavDropdown.Item>
           <NavDropdown.Item onClick = {this.dijkstra}> Dijkstra's Algorithm</NavDropdown.Item>
@@ -573,6 +652,7 @@ class Graph extends Component {
       <button style = {{background: "#FFB266"}}> </button> <span class ="legend"> Soon-to-be-explored grid</span>
       <button style = {{background: "#80FF00"}}> </button> <span class ="legend"> Shortest-path grid</span>
        </div>
+       <TutorialPopUp showTutorial={this.state.tutorialIsOpen}/>
       {this.renderBoard()}
       </div>
     )
@@ -584,25 +664,6 @@ function App() {
   return (
     <div className="App">
     <Graph/>
-    <div class="modal">
-      <div class="modal_content">
-        <span class="close">&times;</span>
-        <p> For a quick start, click on two grids. </p>
-        <img src = {pic1} alt="two grids" />
-        <p> Then, click on "Run Pathfinding Algorithms" and choose an algorithm you want to find the shortest path with</p>
-        <img src = {pic2} alt="run pathfinding algorithms"/>
-        <p> Now you can see how the algorithms find the shortest path between two grids! </p> 
-        <img src = {pic4} alt="shortest path" />
-        <p> Click twice on a grid to make it an obstacle. </p>
-        <img src = {pic5} alt="obstacle" />
-        <p> You can also choose to quickly build a maze, aka placing obstacles "smartly", from one of the maze generation algorithms by clicking on "Generate Maze" and choose one algorithm. </p>
-        <img src = {pic6} alt="maze"  /> 
-        <p> Now you can watch how our algorithm builds a maze! You can put two start/end grids on this new maze and run the pathfinding algorithm as well! </p>
-        <img src = {pic7} alt="maze-run"  /> 
-        <p> Finally, to reset our board, click on "Reset board" on the nagivation bar. </p>
-        <p> Enjoy pathfinding! </p>
-      </div>
-    </div>
     </div>
   );
 }

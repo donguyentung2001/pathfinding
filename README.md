@@ -20,6 +20,7 @@ Now you can see how the algorithms find the shortest path between two grids!
 
 
 Click twice on a grid to make it an obstacle.
+
 <img width="428" alt="pic5" src="https://user-images.githubusercontent.com/54921286/129467976-2162d337-6157-47fc-bbfa-b7f22067ca0e.png">
 
 You can also choose to quickly build a maze, aka placing obstacles "smartly", from one of the maze generation algorithms by clicking on "Generate Maze" and choose one algorithm.

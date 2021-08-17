@@ -238,7 +238,7 @@ class Element extends Component {
     }; 
   };
   render() { 
-    return <button className="square" id = {this.props.id} condition = {this.props.condition} onClick = {this.props.changecond}>  </button>;
+    return <button className="square" id = {this.props.id} condition = {this.props.condition} onClick = {this.props.changecond}> </button>;
   };
 };
 class Graph extends Component { 
@@ -353,8 +353,9 @@ class Graph extends Component {
   findDistance(i, j) { 
     var i_coordinate = this.findCoordinates(i); 
     var j_coordinate = this.findCoordinates(j);
-    var distance = Math.sqrt(Math.pow((i_coordinate[0] - j_coordinate[0]),2) + Math.pow(i_coordinate[1] - j_coordinate[1], 2))
-    return distance 
+    var sum_distance_xy = Math.pow((i_coordinate[0] - j_coordinate[0]),2) + Math.pow((i_coordinate[1] - j_coordinate[1]),2)
+    var distance = Math.pow(sum_distance_xy, 1/2)
+    return distance
   }
 
   getSumArray(arr) { 
@@ -757,9 +758,11 @@ class Graph extends Component {
     var target_node = this.state.endpoints[1];
     var graph = this.state.adjacency_list;
     var to_be_visited = {}
-    to_be_visited[start_node] = 0
+    to_be_visited[start_node] = true 
     var visited = {}
     var parents = {}
+    var distances = {}
+    distances[start_node] = [0, this.findDistance(start_node, target_node)] 
     var current_node = start_node 
     var considering_nodes = setInterval(function() { 
       if (to_be_visited.length == 0 || current_node == target_node) { 
@@ -782,27 +785,27 @@ class Graph extends Component {
       if (current_node != start_node) { 
         this.changeTraverseCondition(current_node, "considered")
       }
-      delete to_be_visited[current_node];
       for (let i=0; i < graph[current_node].length; i++) { 
         if (!(graph[current_node][i] in visited)) { 
           if (this.notVertical(graph[current_node][i], current_node)) { 
-            var start_cost = 1.4; 
+            var start_cost = distances[current_node][0] +  1.4; 
           }
           else { 
-            var start_cost = 1; 
+            var start_cost = distances[current_node][0] + 1; 
           }
           var heuristic_cost = this.findDistance(graph[current_node][i], target_node)
-          if (!(graph[current_node][i] in to_be_visited)) { 
-            to_be_visited[graph[current_node][i]] = [start_cost, heuristic_cost]
+          if (!(graph[current_node][i] in distances)) { 
+            distances[graph[current_node][i]] = [start_cost, heuristic_cost]
+            to_be_visited[graph[current_node][i]] = true 
             parents[graph[current_node][i]] = current_node
           }
           else { 
-            if (this.getSumArray(to_be_visited[graph[current_node][i]]) > start_cost + heuristic_cost) { 
-              to_be_visited[graph[current_node][i]] = [start_cost, heuristic_cost]
+            if (this.getSumArray(distances[graph[current_node][i]]) > start_cost + heuristic_cost) { 
+              distances[graph[current_node][i]] = [start_cost, heuristic_cost]
               parents[graph[current_node][i]] = current_node
             }
-            else if (this.getSumArray(to_be_visited[graph[current_node][i]]) == start_cost + heuristic_cost && to_be_visited[graph[current_node][i]][1] > heuristic_cost) {
-              to_be_visited[graph[current_node][i]] = [start_cost, heuristic_cost]
+            else if (this.getSumArray(distances[graph[current_node][i]]) == start_cost + heuristic_cost && distances[graph[current_node][i]][1] > heuristic_cost) {
+              distances[graph[current_node][i]] = [start_cost, heuristic_cost]
               parents[graph[current_node][i]] = current_node
             }
           }
@@ -811,18 +814,19 @@ class Graph extends Component {
           }
         }
       }
+      delete to_be_visited[current_node];
       var next_node = 1000; // a big value which needs to be replaced later by the first key
       for (const [key, value] of Object.entries(to_be_visited)) {
         if (next_node == 1000) { 
           next_node = key 
         }
-        else if (this.getSumArray(value) < this.getSumArray(to_be_visited[next_node])) { 
+        else if (this.getSumArray(distances[key]) < this.getSumArray(distances[next_node])) { 
           next_node = key; 
         }
-        else if ((this.getSumArray(value) == this.getSumArray(to_be_visited[next_node])) && (value[1] < to_be_visited[next_node][1])) { 
+        else if ((this.getSumArray(distances[key]) == this.getSumArray(distances[next_node])) && (distances[key][1] < distances[next_node][1])) { 
           next_node = key;
         }
-        current_node = next_node; 
+        current_node = parseInt(next_node); 
       }
     }.bind(this), 100)
 

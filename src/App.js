@@ -50,7 +50,6 @@ class TutorialPopUp extends Component {
   }
 
   render() { 
-    console.log(this.props.show)
     return (
       <div> 
       <Modal show = {this.state.tutorialOn} style={customStyles} onHide = {this.handleClose} > 
@@ -146,6 +145,8 @@ class Graph extends Component {
     this.generateMazePrim = this.generateMazePrim.bind(this)
     this.restoreEndpoints = this.restoreEndpoints.bind(this)
     this.showTutorial = this.showTutorial.bind(this)
+    this.getSumArray = this.getSumArray.bind(this)
+    this.a_star = this.a_star.bind(this)
     this.state = { 
       adjacency_list: {},
       endpoints:[], 
@@ -211,16 +212,25 @@ class Graph extends Component {
   }
 
   findCoordinates(i) { 
-    var x_coordinate = i%20; 
-    var y_coordinate = Math.floor(i/20) + 1; 
+    var x_coordinate = (i-1)%20; 
+    var y_coordinate = Math.floor(((i-1)/20));
     return [x_coordinate, y_coordinate]; 
   }
 
   findDistance(i, j) { 
     var i_coordinate = this.findCoordinates(i); 
     var j_coordinate = this.findCoordinates(j);
-    var distance = Math.sqrt(Math.pow((i_coordinate[0] - j_coordinate[0]),2) + Math.pow(i_coordinate[1] - j_coordinate[2], 2))
+    var distance = Math.sqrt(Math.pow((i_coordinate[0] - j_coordinate[0]),2) + Math.pow(i_coordinate[1] - j_coordinate[1], 2))
     return distance 
+  }
+
+  getSumArray(arr) { 
+    var count = 0;
+   for (let i=0; i < arr.length; i++) 
+    { 
+      count += arr[i]; 
+    }
+    return count 
   }
 
   changeInitialCondition(i) { 
@@ -446,7 +456,6 @@ class Graph extends Component {
     }
     var building_blocks = setInterval(function() { 
       if (cell_list.length == 0) { 
-        console.log("here")
         clearInterval(building_blocks); 
         for (let i = 1; i <= 400; i++) { 
           if (!(i in explored)) { 
@@ -458,7 +467,6 @@ class Graph extends Component {
         return 
       }
       var current_node = cell_list[Math.floor(Math.random()*cell_list.length)]; 
-      console.log(current_node)
       var neighbors = original_graph[current_node]; 
       var nums_explored = 0 
       for (let i=0; i < neighbors.length; i++) { 
@@ -507,9 +515,11 @@ class Graph extends Component {
                 this.restoreEndpoints(); 
                 return 
               }
-              this.changeTraverseCondition(current_node, "chosen");
+              if (current_node != target_node) { 
+                this.changeTraverseCondition(current_node, "chosen");
+              }
               current_node = parents[current_node]; 
-            }.bind(this), 300)
+            }.bind(this), 100)
           }
           return 
         }
@@ -567,9 +577,11 @@ class Graph extends Component {
                 clearInterval(getting_path); 
                 return 
               }
-              this.changeTraverseCondition(current_node, "chosen");
+              if (current_node != target_node) { 
+                this.changeTraverseCondition(current_node, "chosen");
+              }
               current_node = parents[current_node]; 
-            }.bind(this), 300)
+            }.bind(this), 100)
             return 
         }
         var current_distances = {}
@@ -599,6 +611,86 @@ class Graph extends Component {
 
     }.bind(this), 40)
   };
+
+  a_star() { 
+    this.resetExceptEndPoints(); 
+    if (this.state.endpoints.length != 2) { 
+      return 
+    }
+    var start_node = this.state.endpoints[0];
+    var target_node = this.state.endpoints[1];
+    var graph = this.state.adjacency_list;
+    var to_be_visited = {}
+    to_be_visited[start_node] = 0
+    var visited = {}
+    var parents = {}
+    var current_node = start_node 
+    var considering_nodes = setInterval(function() { 
+      if (to_be_visited.length == 0 || current_node == target_node) { 
+        clearInterval(considering_nodes); 
+        var getting_path = setInterval(function() { 
+          if (current_node == start_node) { 
+            this.changeTraverseCondition(current_node, "chosen");
+            this.restoreEndpoints(); 
+            clearInterval(getting_path); 
+            return 
+          }
+          if (current_node != target_node) { 
+            this.changeTraverseCondition(current_node, "chosen");
+          }
+          current_node = parents[current_node]; 
+        }.bind(this), 100)
+        return 
+      }
+      visited[current_node] = true;
+      if (current_node != start_node) { 
+        this.changeTraverseCondition(current_node, "considered")
+      }
+      delete to_be_visited[current_node];
+      for (let i=0; i < graph[current_node].length; i++) { 
+        if (!(graph[current_node][i] in visited)) { 
+          if (this.notVertical(graph[current_node][i], current_node)) { 
+            var start_cost = 1.4; 
+          }
+          else { 
+            var start_cost = 1; 
+          }
+          var heuristic_cost = this.findDistance(graph[current_node][i], target_node)
+          if (!(graph[current_node][i] in to_be_visited)) { 
+            to_be_visited[graph[current_node][i]] = [start_cost, heuristic_cost]
+            parents[graph[current_node][i]] = current_node
+          }
+          else { 
+            if (this.getSumArray(to_be_visited[graph[current_node][i]]) > start_cost + heuristic_cost) { 
+              to_be_visited[graph[current_node][i]] = [start_cost, heuristic_cost]
+              parents[graph[current_node][i]] = current_node
+            }
+            else if (this.getSumArray(to_be_visited[graph[current_node][i]]) == start_cost + heuristic_cost && to_be_visited[graph[current_node][i]][1] > heuristic_cost) {
+              to_be_visited[graph[current_node][i]] = [start_cost, heuristic_cost]
+              parents[graph[current_node][i]] = current_node
+            }
+          }
+          if (graph[current_node][i] != target_node) { 
+            this.changeTraverseCondition(graph[current_node][i], "considered-d")
+          }
+        }
+      }
+      var next_node = 1000; // a big value which needs to be replaced later by the first key
+      for (const [key, value] of Object.entries(to_be_visited)) {
+        if (next_node == 1000) { 
+          next_node = key 
+        }
+        else if (this.getSumArray(value) < this.getSumArray(to_be_visited[next_node])) { 
+          next_node = key; 
+        }
+        else if ((this.getSumArray(value) == this.getSumArray(to_be_visited[next_node])) && (value[1] < to_be_visited[next_node][1])) { 
+          next_node = key;
+        }
+        current_node = next_node; 
+      }
+    }.bind(this), 100)
+
+  }
 
   renderElement(i) { 
     return <Element id={i} condition={this.state.conditions[i]} changecond={() => this.changeInitialCondition(i)}/>
@@ -631,6 +723,7 @@ class Graph extends Component {
           <NavDropdown title="Run Pathfinding Algorithms" id="basic-nav-dropdown"> 
           <NavDropdown.Item onClick = {this.BFS}>Breadth First Search</NavDropdown.Item>
           <NavDropdown.Item onClick = {this.dijkstra}> Dijkstra's Algorithm</NavDropdown.Item>
+          <NavDropdown.Item onClick = {this.a_star}> A* search Algorithm</NavDropdown.Item>
           </NavDropdown>
           <NavDropdown title="Generate Maze" id="basic-nav-dropdown">
           <NavDropdown.Item onClick = {this.generateMazePrim}> Randomized Prim's Algorithm</NavDropdown.Item>

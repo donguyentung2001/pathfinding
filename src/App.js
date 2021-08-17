@@ -93,6 +93,123 @@ class TutorialPopUp extends Component {
     )
   }
 }
+
+class NotEnoughNodesPopUp extends Component { 
+  constructor(props) { 
+    super(props); 
+    this.state = { 
+      warningOn: false 
+    }
+    this.handleClose = this.handleClose.bind(this)
+  }
+
+  componentDidUpdate(prevProps) { 
+    if (this.props.showWarning != prevProps.showWarning) { 
+      this.setState(state => ({ 
+        warningOn: true 
+      }))
+    }
+  }
+
+  handleClose() { 
+    this.setState(state => ({ 
+      warningOn: false 
+    }))
+  }
+
+  render() { 
+    return (
+      <div> 
+      <Modal show = {this.state.warningOn} style={customStyles} onHide = {this.handleClose} > 
+      <Modal.Header
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+      <Modal.Title> 
+      Warning 
+      </Modal.Title>
+      </Modal.Header>          
+      <Modal.Body> 
+      <p> You need exactly 2 start/end grids.  </p>
+       </Modal.Body>
+       <Modal.Footer style={{
+          display: "flex",
+          justifyContent: "center",
+        }}>
+          <Button variant="primary" style = {{width: "70px", height: "50px"}} onClick={this.handleClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </div>
+    )
+  }
+}
+
+class AlgorithmPopUp extends Component { 
+  constructor(props) { 
+    super(props); 
+    this.state = { 
+      algorithmOn: false 
+    }
+    this.handleClose = this.handleClose.bind(this)
+  }
+
+  componentDidUpdate(prevProps) { 
+    if (this.props.showAlgorithm != prevProps.showAlgorithm) { 
+      this.setState(state => ({ 
+        algorithmOn: true 
+      }))
+    }
+  }
+
+  handleClose() { 
+    this.setState(state => ({ 
+      algorithmOn: false 
+    }))
+  }
+
+  render() { 
+    return (
+      <div> 
+      <Modal show = {this.state.algorithmOn} style={customStyles} onHide = {this.handleClose} > 
+      <Modal.Header
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+      <Modal.Title> 
+      About our algorithms 
+      </Modal.Title>
+      </Modal.Header>          
+      <Modal.Body> 
+      <h3> Grid setup </h3>
+      <p> A single grid is connected to all of its adjacent grids (vertically, horizontally, diagonally), unless the adjacent grid is an obstacle. </p>
+      <p> For path-finding algorithm of weighted graphs, we let the distance between a grid and its vertical and horizontal neighbors to be 1,
+      and the distance between a grid and its diagonal neighbor to be 1.4. </p>
+      <h3> Algorithm </h3>
+      <p> Breadth-first search is <b> unweighted </b> and guarantees shortest path.  </p>
+      <p> Dijkstra's algorithm is <b> weighted </b> and guarantees shortest path.  </p>
+      <p> A* search algorithm is <b> weighted </b> and guarantees shortest path.  </p>
+       </Modal.Body>
+       <Modal.Footer style={{
+          display: "flex",
+          justifyContent: "center",
+        }}>
+          <Button variant="primary" style = {{width: "70px", height: "50px"}} onClick={this.handleClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </div>
+    )
+  }
+}
 class Element extends Component { 
   constructor(props) {
     super(props);
@@ -145,6 +262,8 @@ class Graph extends Component {
     this.generateMazePrim = this.generateMazePrim.bind(this)
     this.restoreEndpoints = this.restoreEndpoints.bind(this)
     this.showTutorial = this.showTutorial.bind(this)
+    this.showWarning = this.showWarning.bind(this)
+    this.showAlgorithm = this.showAlgorithm.bind(this)
     this.getSumArray = this.getSumArray.bind(this)
     this.a_star = this.a_star.bind(this)
     this.state = { 
@@ -152,6 +271,8 @@ class Graph extends Component {
       endpoints:[], 
       conditions:{}, 
       tutorialIsOpen: false, 
+      warningIsOn: false, 
+      algorithmIsOn: false, 
     };
     for (let i = 1; i <= 400; i++) {
       this.state.conditions[i] = "default"; 
@@ -198,6 +319,18 @@ class Graph extends Component {
   showTutorial() {   
     this.setState({ 
       tutorialIsOpen: !this.state.tutorialIsOpen
+    })
+  }
+
+  showWarning() { 
+    this.setState({ 
+      warningIsOn: !this.state.warningIsOn 
+    })
+  }
+
+  showAlgorithm() { 
+    this.setState({ 
+      algorithmIsOn: !this.state.algorithmIsOn
     })
   }
 
@@ -493,6 +626,7 @@ class Graph extends Component {
   BFS() { 
     this.resetExceptEndPoints(); 
     if (this.state.endpoints.length != 2) { 
+      this.showWarning(); 
       return 
     }
     var start_node = this.state.endpoints[0];
@@ -545,6 +679,7 @@ class Graph extends Component {
   dijkstra() { 
     this.resetExceptEndPoints(); 
     if (this.state.endpoints.length != 2) { 
+      this.showWarning(); 
       return 
     }
     var start_node = this.state.endpoints[0];
@@ -615,6 +750,7 @@ class Graph extends Component {
   a_star() { 
     this.resetExceptEndPoints(); 
     if (this.state.endpoints.length != 2) { 
+      this.showWarning(); 
       return 
     }
     var start_node = this.state.endpoints[0];
@@ -730,6 +866,7 @@ class Graph extends Component {
           <NavDropdown.Item onClick = {this.generateMazeRandom}> Just a random maze</NavDropdown.Item>
           </NavDropdown>
           <Nav.Link onClick = {this.reset}> Reset Board </Nav.Link>
+          <Nav.Link onClick = {this.showAlgorithm}>  About Our Algorithms </Nav.Link>
         </Nav>
         </Container>
       </Navbar>
@@ -746,6 +883,8 @@ class Graph extends Component {
       <button style = {{background: "#80FF00"}}> </button> <span class ="legend"> Shortest-path grid</span>
        </div>
        <TutorialPopUp showTutorial={this.state.tutorialIsOpen}/>
+       <NotEnoughNodesPopUp showWarning = {this.state.warningIsOn}/>
+       <AlgorithmPopUp showAlgorithm = {this.state.algorithmIsOn}/>
       {this.renderBoard()}
       </div>
     )

@@ -196,6 +196,7 @@ class AlgorithmPopUp extends Component {
       <p> Breadth-first search is <b> unweighted </b> and guarantees shortest path.  </p>
       <p> Dijkstra's algorithm is <b> weighted </b> and guarantees shortest path.  </p>
       <p> A* search algorithm is <b> weighted </b> and guarantees shortest path.  </p>
+      <p> Greedy Best-First Search algorithm is <b> weighted </b> but does <b> not </b> guarantee shortest path.  </p>
        </Modal.Body>
        <Modal.Footer style={{
           display: "flex",
@@ -266,6 +267,7 @@ class Graph extends Component {
     this.showAlgorithm = this.showAlgorithm.bind(this)
     this.getSumArray = this.getSumArray.bind(this)
     this.a_star = this.a_star.bind(this)
+    this.greedy_bestfs = this.greedy_bestfs.bind(this)
     this.state = { 
       adjacency_list: {},
       endpoints:[], 
@@ -829,7 +831,84 @@ class Graph extends Component {
         current_node = parseInt(next_node); 
       }
     }.bind(this), 100)
+  }
 
+  greedy_bestfs() { 
+    this.resetExceptEndPoints(); 
+    if (this.state.endpoints.length != 2) { 
+      this.showWarning(); 
+      return 
+    }
+    var start_node = this.state.endpoints[0];
+    var target_node = this.state.endpoints[1];
+    var graph = this.state.adjacency_list;
+    var to_be_visited = {}
+    to_be_visited[start_node] = true 
+    var visited = {}
+    var parents = {}
+    var distances = {}
+    distances[start_node] = [0, this.findDistance(start_node, target_node)] 
+    var current_node = start_node 
+    var considering_nodes = setInterval(function() { 
+      if (to_be_visited.length == 0 || current_node == target_node) { 
+        clearInterval(considering_nodes); 
+        var getting_path = setInterval(function() { 
+          if (current_node == start_node) { 
+            this.changeTraverseCondition(current_node, "chosen");
+            this.restoreEndpoints(); 
+            clearInterval(getting_path); 
+            return 
+          }
+          if (current_node != target_node) { 
+            this.changeTraverseCondition(current_node, "chosen");
+          }
+          current_node = parents[current_node]; 
+        }.bind(this), 100)
+        return 
+      }
+      visited[current_node] = true;
+      if (current_node != start_node) { 
+        this.changeTraverseCondition(current_node, "considered")
+      }
+      for (let i=0; i < graph[current_node].length; i++) { 
+        if (!(graph[current_node][i] in visited)) { 
+          var start_cost = 0
+          var heuristic_cost = this.findDistance(graph[current_node][i], target_node)
+          if (!(graph[current_node][i] in distances)) { 
+            distances[graph[current_node][i]] = [start_cost, heuristic_cost]
+            to_be_visited[graph[current_node][i]] = true 
+            parents[graph[current_node][i]] = current_node
+          }
+          else { 
+            if (this.getSumArray(distances[graph[current_node][i]]) > start_cost + heuristic_cost) { 
+              distances[graph[current_node][i]] = [start_cost, heuristic_cost]
+              parents[graph[current_node][i]] = current_node
+            }
+            else if (this.getSumArray(distances[graph[current_node][i]]) == start_cost + heuristic_cost && distances[graph[current_node][i]][1] > heuristic_cost) {
+              distances[graph[current_node][i]] = [start_cost, heuristic_cost]
+              parents[graph[current_node][i]] = current_node
+            }
+          }
+          if (graph[current_node][i] != target_node) { 
+            this.changeTraverseCondition(graph[current_node][i], "considered-d")
+          }
+        }
+      }
+      delete to_be_visited[current_node];
+      var next_node = 1000; // a big value which needs to be replaced later by the first key
+      for (const [key, value] of Object.entries(to_be_visited)) {
+        if (next_node == 1000) { 
+          next_node = key 
+        }
+        else if (this.getSumArray(distances[key]) < this.getSumArray(distances[next_node])) { 
+          next_node = key; 
+        }
+        else if ((this.getSumArray(distances[key]) == this.getSumArray(distances[next_node])) && (distances[key][1] < distances[next_node][1])) { 
+          next_node = key;
+        }
+        current_node = parseInt(next_node); 
+      }
+    }.bind(this), 100)
   }
 
   renderElement(i) { 
@@ -864,6 +943,7 @@ class Graph extends Component {
           <NavDropdown.Item onClick = {this.BFS}>Breadth First Search</NavDropdown.Item>
           <NavDropdown.Item onClick = {this.dijkstra}> Dijkstra's Algorithm</NavDropdown.Item>
           <NavDropdown.Item onClick = {this.a_star}> A* search Algorithm</NavDropdown.Item>
+          <NavDropdown.Item onClick = {this.greedy_bestfs}> Greedy Best-First Search Algorithm</NavDropdown.Item>
           </NavDropdown>
           <NavDropdown title="Generate Maze" id="basic-nav-dropdown">
           <NavDropdown.Item onClick = {this.generateMazePrim}> Randomized Prim's Algorithm</NavDropdown.Item>
